@@ -2,27 +2,40 @@ package com.zendeka.guildwars2fieldmanual;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.JsonReader;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.zendeka.gw2apiandroid.gw2api.Continent;
+import com.zendeka.gw2apiandroid.gw2api.parsers.ContinentsParser;
+import com.zendeka.gw2apiandroid.gw2api.tasks.ContinentsRequestTask;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity {
+    private static final String CONTINENTS_URL = "https://api.guildwars2.com/v1/continents.json";
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private List<Continent> mContinents;
+    private ContinentsRequestTask mContinentsRequestTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        fetchContinentsIfNeeded();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+        fetchContinentsIfNeeded();
     }
 
     /**
@@ -44,8 +57,7 @@ public class MapsActivity extends FragmentActivity {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
+            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
                 setUpMap();
@@ -58,5 +70,31 @@ public class MapsActivity extends FragmentActivity {
         TileOverlayOptions opts = new TileOverlayOptions();
         opts.tileProvider(new GuildWars2UrlTileProvider(256, 256));
         TileOverlay overlay = mMap.addTileOverlay(opts);
+    }
+
+    private void fetchContinentsIfNeeded() {
+        if (mContinents == null &&
+            mContinentsRequestTask == null) {
+            fetchContinents();
+        }
+    }
+
+    private void fetchContinents() {
+        mContinentsRequestTask = new ContinentsRequestTask(new ContinentsRequestTask.OnContinentsRequestTaskCompleted() {
+            @Override
+            public void continentsRequestTaskResult(String s) {
+                StringReader stringReader = new StringReader(s);
+                JsonReader jsonReader = new JsonReader(stringReader);
+                ContinentsParser parser = new ContinentsParser();
+
+                try {
+                    mContinents = parser.readContinents(jsonReader);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        mContinentsRequestTask.execute(CONTINENTS_URL);
     }
 }
