@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GuildWars2 Field Manual</string>
+    <string name="continents_spinner_title">Continents</string>
 </resources>
