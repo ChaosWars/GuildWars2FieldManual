@@ -2,7 +2,7 @@ package com.zendeka.guildwars2fieldmanual;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.JsonReader;
 import android.view.View;
@@ -14,6 +14,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.zendeka.guildwars2fieldmanual.adapters.ContinentsAdapter;
+import com.zendeka.guildwars2fieldmanual.utils.CheckGoogleApiAvailability;
 import com.zendeka.gw2apiandroid.gw2api.Continent;
 import com.zendeka.gw2apiandroid.gw2api.parsers.ContinentsParser;
 import com.zendeka.gw2apiandroid.gw2api.tasks.ContinentsRequestTask;
@@ -22,10 +23,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-public class MapsActivity extends ActionBarActivity implements AdapterView.OnItemSelectedListener {
+public class MapsActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final String CONTINENTS_URL = "https://api.guildwars2.com/v1/continents.json";
-//    private static final String TAG = "MAPS_ACTIVITY";
-//    private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 1;
+    private static final String TAG = "MAPS_ACTIVITY";
+    private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 1;
 
     private GuildWars2UrlTileProvider mUrlTileProvider;
     private TileOverlay mTileOverlay;
@@ -44,10 +45,10 @@ public class MapsActivity extends ActionBarActivity implements AdapterView.OnIte
         setupContinentsAdapter();
         setupToolbar();
         setupContinentsSpinner();
-        setupActionBar();
+//        setupActionBar();
         setUpMapIfNeeded();
         fetchContinentsIfNeeded();
-//        CheckGooglePlayServices.checkGooglePlayServicesAvailability(this, GOOGLE_PLAY_SERVICES_REQUEST_CODE, TAG);
+        CheckGoogleApiAvailability.checkGooglePlayServices(this, GOOGLE_PLAY_SERVICES_REQUEST_CODE, TAG);
     }
 
     @Override

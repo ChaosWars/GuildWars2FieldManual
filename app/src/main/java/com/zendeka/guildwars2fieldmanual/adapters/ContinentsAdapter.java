@@ -1,6 +1,7 @@
 package com.zendeka.guildwars2fieldmanual.adapters;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +38,7 @@ public class ContinentsAdapter extends ArrayAdapter<Continent> implements Spinne
 
         if (view != null) {
             textView = (TextView) view.findViewById(android.R.id.text1);
-            int color = getContext().getResources().getColor(android.R.color.primary_text_dark);
+            int color = ContextCompat.getColor(getContext(), android.R.color.primary_text_dark);
             textView.setTextColor(color);
         }
 
