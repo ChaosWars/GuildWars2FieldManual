@@ -2,19 +2,20 @@ package com.zendeka.guildwars2fieldmanual;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.JsonReader;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.zendeka.guildwars2fieldmanual.adapters.ContinentsAdapter;
-import com.zendeka.guildwars2fieldmanual.utils.CheckGoogleApiAvailability;
 import com.zendeka.gw2apiandroid.gw2api.Continent;
 import com.zendeka.gw2apiandroid.gw2api.parsers.ContinentsParser;
 import com.zendeka.gw2apiandroid.gw2api.tasks.ContinentsRequestTask;
@@ -23,10 +24,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
-    private static final String CONTINENTS_URL = "https://api.guildwars2.com/v1/continents.json";
-    private static final String TAG = "MAPS_ACTIVITY";
-    private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 1;
+public class MapsActivity
+        extends ActionBarActivity
+        implements AdapterView.OnItemSelectedListener, GoogleMap.OnCameraChangeListener
+{
+    private static final String CONTINENTS_URL = "https://api.guildwars2.com/v2/continents.json?ids=all";
+//    private static final String TAG = "MAPS_ACTIVITY";
+//    private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 1;
 
     private GuildWars2UrlTileProvider mUrlTileProvider;
     private TileOverlay mTileOverlay;
@@ -45,10 +49,10 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
         setupContinentsAdapter();
         setupToolbar();
         setupContinentsSpinner();
-//        setupActionBar();
+        setupActionBar();
         setUpMapIfNeeded();
         fetchContinentsIfNeeded();
-        CheckGoogleApiAvailability.checkGooglePlayServices(this, GOOGLE_PLAY_SERVICES_REQUEST_CODE, TAG);
+//        CheckGooglePlayServices.checkGooglePlayServicesAvailability(this, GOOGLE_PLAY_SERVICES_REQUEST_CODE, TAG);
     }
 
     @Override
@@ -70,6 +74,25 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+        if (mUrlTileProvider == null || mMap == null) {
+            return;
+        }
+
+        Continent continent = mUrlTileProvider.getContinent();
+
+        if (continent == null) {
+            return;
+        }
+
+        if (cameraPosition.zoom < continent.getMinZoom()) {
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(continent.getMinZoom()));
+        } else if (cameraPosition.zoom > continent.getMaxZoom()) {
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(continent.getMaxZoom()));
+        }
+    }
+
     private void selectContinent(int position) {
         Continent continent = mContinentsAdapter.getItem(position);
         boolean setContinent = mUrlTileProvider.getContinent() != continent;
@@ -79,11 +102,13 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
         mUrlTileProvider.setContinent(continent);
-        mUrlTileProvider.setFloor(continent.getFloors()[0]);
+        mUrlTileProvider.setFloor(1);
+        mTileOverlay.clearTileCache();
 
         if (mMap != null) {
-            mMap.clear();
-            setUpMap();
+//            mMap.clear();
+//            setUpMap();
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(continent.getMinZoom()));
         }
     }
 
@@ -99,8 +124,7 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private void setupContinentsAdapter() {
         if (mContinentsAdapter == null) {
-            mContinentsAdapter = new ContinentsAdapter(this, android.R.layout.simple_spinner_dropdown_item);
-//            mContinentsAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+            mContinentsAdapter = new ContinentsAdapter(this, R.layout.item_continent);
 
             if (mContinents != null) {
                 mContinentsAdapter.addAll(mContinents);
@@ -158,6 +182,7 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void setUpMap() {
+        mMap.setOnCameraChangeListener(this);
         mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
         TileOverlayOptions opts = new TileOverlayOptions();
         opts.tileProvider(mUrlTileProvider);
@@ -192,6 +217,12 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    try {
+                        jsonReader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
