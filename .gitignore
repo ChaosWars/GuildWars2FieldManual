@@ -5,3 +5,4 @@ local.properties
 /build
 GuildWars2FieldManual.iml
 app/app.iml
+gen/
