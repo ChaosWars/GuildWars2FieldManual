@@ -149,11 +149,14 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
-            mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
+            ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMapAsync(googleMap -> {
+                // Check if we were successful in obtaining the map.
+                mMap = googleMap;
+
+                if (mMap != null) {
+                    setUpMap();
+                }
+            });
         }
     }
 
@@ -172,27 +175,24 @@ public class MapsActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void fetchContinents() {
-        mContinentsRequestTask = new ContinentsRequestTask(new ContinentsRequestTask.OnContinentsRequestTaskCompleted() {
-            @Override
-            public void continentsRequestTaskResult(String s) {
-                StringReader stringReader = new StringReader(s);
-                JsonReader jsonReader = new JsonReader(stringReader);
-                ContinentsParser parser = new ContinentsParser();
+        mContinentsRequestTask = new ContinentsRequestTask(s -> {
+            StringReader stringReader = new StringReader(s);
+            JsonReader jsonReader = new JsonReader(stringReader);
+            ContinentsParser parser = new ContinentsParser();
 
-                try {
-                    mContinents = parser.readContinents(jsonReader);
+            try {
+                mContinents = parser.readContinents(jsonReader);
 
-                    if (mContinentsAdapter != null) {
-                        mContinentsAdapter.clear();
-                        mContinentsAdapter.addAll(mContinents);
+                if (mContinentsAdapter != null) {
+                    mContinentsAdapter.clear();
+                    mContinentsAdapter.addAll(mContinents);
 
-                        if (mContinents.size() > 0) {
-                            selectContinent(0);
-                        }
+                    if (mContinents.size() > 0) {
+                        selectContinent(0);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         });
 
